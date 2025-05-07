@@ -35,8 +35,9 @@ internal class GatewayLoginRequest : IPacketHandler
 
         if ((packet.Opcode == 0x610A &&
              Game.ClientType == GameClientType.Turkey) ||
-            Game.ClientType == GameClientType.VTC_Game)
-            packet.ReadBytes(6);
+            Game.ClientType == GameClientType.VTC_Game ||
+            Game.ClientType == GameClientType.RuSro)
+            Game.MacAddress = packet.ReadBytes(6); //reassigned in case of manual login when auto is enabled
 
         var shardId = packet.ReadUShort();
 

@@ -68,6 +68,7 @@ internal partial class Main : DoubleBufferedControl
     {
         AutoLogin.Pending = false;
         View.PendingWindow?.Hide();
+        View.PendingWindow?.StopClientlessQueueTask();
 
         if (!Kernel.Proxy.IsConnectedToAgentserver)
         {
@@ -105,6 +106,8 @@ internal partial class Main : DoubleBufferedControl
         txtStaticCaptcha.Text = GlobalConfig.Get<string>("RSBot.General.StaticCaptcha");
         checkEnableLoginDelay.Checked = GlobalConfig.Get<bool>("RSBot.General.EnableLoginDelay");
         numLoginDelay.Value = GlobalConfig.Get("RSBot.General.LoginDelay", 3);
+        checkWaitAfterDC.Checked = GlobalConfig.Get<bool>("RSBot.General.EnableWaitAfterDC");
+        numWaitAfterDC.Value = GlobalConfig.Get("RSBot.General.WaitAfterDC", 3);
         checkHideClient.Checked = GlobalConfig.Get<bool>("RSBot.General.HideOnStartClient");
         checkCharAutoSelect.Checked = GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelect");
         radioAutoSelectFirst.Checked = GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelectFirst", true);
@@ -305,8 +308,10 @@ internal partial class Main : DoubleBufferedControl
     {
         Kernel.Bot.Stop();
 
+        var ruSroAuthenticated = await HandleRuSroAuth();
+
         // Skiped: Cuz managing from ClientlessManager
-        if (Game.Clientless)
+        if (Game.Clientless && ruSroAuthenticated)
             return;
 
         // If user disconnected with manual from clientless, we dont need open the client automatically again.
@@ -320,9 +325,17 @@ internal partial class Main : DoubleBufferedControl
             btnStartClient.Enabled = false;
             btnStartClientless.Enabled = false;
 
-            Thread.Sleep(2000);
+            int delay = 10000;
+            if (GlobalConfig.Get("RSBot.General.EnableWaitAfterDC", false))
+                delay = GlobalConfig.Get<int>("RSBot.General.WaitAfterDC") * 60 * 1000;
 
-            await StartClientProcess().ConfigureAwait(false);
+            Log.Warn($"Attempting relogin in {delay / 1000} seconds...");
+            Thread.Sleep(delay);
+
+            if (ruSroAuthenticated)
+            {
+                await StartClientProcess().ConfigureAwait(false);
+            }
             return;
         }
 
@@ -507,7 +520,7 @@ internal partial class Main : DoubleBufferedControl
     /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
     private async void btnStartClientless_Click(object sender, EventArgs e)
     {
-        await Task.Run(() =>
+        await Task.Run(async () =>
         {
             if (!Game.Clientless)
             {
@@ -527,7 +540,14 @@ internal partial class Main : DoubleBufferedControl
                 Game.Clientless = true;
                 Log.StatusLang("StartingClientless");
                 btnStartClientless.Text = LanguageManager.GetLang("Disconnect");
-                Game.Start();
+
+                var ruSroAuthenticated = await HandleRuSroAuth();
+
+                if (ruSroAuthenticated)
+                {
+                    Game.Start();
+                }
+
             }
             else
             {
@@ -555,7 +575,7 @@ internal partial class Main : DoubleBufferedControl
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-    private void btnStartClient_Click(object sender, EventArgs e)
+    private async void btnStartClient_Click(object sender, EventArgs e)
     {
         if (!Game.Clientless && Kernel.Proxy != null && Kernel.Proxy.IsConnectedToAgentserver)
         {
@@ -572,7 +592,20 @@ internal partial class Main : DoubleBufferedControl
             return;
         }
 
-        StartClientProcess();
+        var ruSroAuthenticated = await HandleRuSroAuth();
+
+        if (ruSroAuthenticated)
+        {
+            await StartClientProcess();
+        }
+    }
+
+    private async Task<bool> HandleRuSroAuth()
+    {
+        var clientType = (GameClientType) comboBoxClientType.SelectedIndex;
+        if (clientType != GameClientType.RuSro) return true;
+
+        return await RuSroAuthService.Auth();
     }
 
     /// <summary>
@@ -663,6 +696,26 @@ internal partial class Main : DoubleBufferedControl
     private void numLoginDelay_ValueChanged(object sender, EventArgs e)
     {
         GlobalConfig.Set("RSBot.General.LoginDelay", numLoginDelay.Value);
+    }
+
+    /// <summary>
+    ///     Handles the CheckedChanged event of the checkWaitAfterDC control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+    private void checkWaitAfterDC_CheckedChanged(object sender, EventArgs e)
+    {
+        GlobalConfig.Set("RSBot.General.EnableWaitAfterDC", checkWaitAfterDC.Checked);
+    }
+
+    /// <summary>
+    ///     Handles the ValueChanged event of the numWaitAfterDC control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+    private void numWaitAfterDC_ValueChanged(object sender, EventArgs e)
+    {
+        GlobalConfig.Set("RSBot.General.WaitAfterDC", numWaitAfterDC.Value);
     }
 
     /// <summary>

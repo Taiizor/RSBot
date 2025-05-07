@@ -2,6 +2,12 @@
 
 Hello reputable Silkroad Online community. This is a free and open source Silkroad Online bot which is being maintained and developed by the community. You can edit the code as you wish, you can open pull requests for the changes you've made to support the bot. The supported clients that are listed below are a result of prolonged work. If you encounter any errors, you can create a ticket in our [Discord](https://discord.gg/MuY5ejEU3r) or create issues at [GitHub](https://github.com/SDClowen/RSBot/issues), to get the recent updates/announcements you can follow the repository or join the Discord server.
 
+## Download links
+
+Stable binaries are available [here](https://github.com/SDClowen/RSBot/releases/latest).
+
+However every week, if there's been any development, nightly binaries are available as pre-releases [here](https://github.com/SDClowen/RSBot/releases).
+
 ## Supported clients
 
 | Region          | Version                            |
@@ -17,6 +23,7 @@ Hello reputable Silkroad Online community. This is a free and open source Silkro
 | Global          | iSRO (International Silkroad)      |
 | Turkey          | TRSRO                              |
 | Korean          | KSRO                               |
+| Russia          | RuSro                              |
 | Rigid           | iSRO (International Silkroad 2015) |
 | ~~Chinese Old~~ | ~~MHTC~~                           |
 | ~~Japanese-R~~  |                                    |
@@ -37,6 +44,14 @@ Hello reputable Silkroad Online community. This is a free and open source Silkro
 
 ![Language](https://img.shields.io/badge/language-CSharp-blue.svg)
 [![GitHub License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/SDClowen/RSBot/blob/master/LICENSE)
+
+## Building the project
+
+1. Clone the repository (`git clone --recursive https://github.com/SDClowen/RSBot.git`)
+2. Open the project in Visual Studio 2022 (Required workloads are `.NET desktop development` and `Desktop development with C++`)
+3. Built the project (`Ctrl+Shift+B`)
+4. Copy the contents of `Dependencies` directory to `Build\Data`
+5. Run the executable from `Build\RSBot.exe`
 
 ## Support the project
 
